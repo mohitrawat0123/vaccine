@@ -22,7 +22,12 @@ public enum District {
     SOUTH_WEST_DELHI("SouthWestDelhi", 150),
 
     //HARYANA
-    GURGAON("Gurgaon", 188);
+    GURGAON("Gurgaon", 188),
+
+    //UP
+    GAUTAM_BUDDH_NAGAR("GautamBuddhaNagar", 650),
+    GHAZIABAD("Ghaziabad", 651);
+
 
 
     private final String name;
