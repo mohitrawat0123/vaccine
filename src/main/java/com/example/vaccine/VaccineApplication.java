@@ -51,9 +51,9 @@ public class VaccineApplication {
 		mailSender.setHost("smtp.gmail.com");
 		mailSender.setPort(587);
 		//Set gmail email id
-		mailSender.setUsername("mohitr.ec@nsit.net.in");
+		mailSender.setUsername("your_email_id");
 		//Set gmail email password
-		mailSender.setPassword("Nsit@123");
+		mailSender.setPassword("your_password");
 		Properties prop = mailSender.getJavaMailProperties();
 		prop.put("mail.transport.protocol", "smtp");
 		prop.put("mail.smtp.auth", "true");

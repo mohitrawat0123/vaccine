@@ -94,7 +94,7 @@ public class SlotFinderService implements ISlotFinderService {
                     if(sessionDTO.getAvailable() > 0 && sessionDTO.getMinAge().equals(age)){
                         if(!CollectionUtils.isEmpty(sessionDTO.getSlots())){
 
-                            String message = center.getName() +"\n"+ center.getAddress()+ ", "+ center.getPincode()
+                            String message = "Site: " + center.getName() +"\nAddress: "+ center.getAddress()+ ", "+ center.getPincode()
                                     +"\n"+"Vaccine: "+sessionDTO.getVaccine()
                                     +"\n"+sessionDTO.getAvailable()+" slot(s) available on "+ new SimpleDateFormat("EEE, d MMM").format(sessionDTO.getDate());
 
@@ -103,7 +103,7 @@ public class SlotFinderService implements ISlotFinderService {
                                 MailRequestDTO mailRequestDTO = MailRequestDTO.builder()
                                         .from("noreply@cowidbot.in")
                                         .to(emailIds)
-                                        .subject("Vaccination Slot Available | " + center.getDistrictName())
+                                        .subject("Vaccination Slot Available | " + center.getName() +" | "+center.getDistrictName())
                                         .body(message)
                                         .build();
                                 mailSenderUtil.sendMail(mailRequestDTO);
