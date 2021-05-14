@@ -1,5 +1,6 @@
 package com.example.vaccine.dto;
 
+import com.example.vaccine.enums.Vaccine;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -22,7 +23,7 @@ public class SessionDTO {
     @JsonAlias("min_age_limit")
     private Integer minAge;
 
-    private String vaccine;
+    private Vaccine vaccine;
 
     private List<String> slots;
 }

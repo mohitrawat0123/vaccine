@@ -1,13 +1,15 @@
 package com.example.vaccine.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import lombok.ToString;
+import io.swagger.models.auth.In;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public enum District {
 
+
+    //DELHI
     CENTRAL_DELHI("CentralDelhi", 141),
     WEST_DELHI("WestDelhi", 142),
     NORTH_WEST_DELHI("NorthWestDelhi", 143),
@@ -17,13 +19,18 @@ public enum District {
     NORTH_EAST_DELHI("NorthEastDelhi", 147),
     SHAHDARA("Shahdara", 148),
     SOUTH_DELHI("SouthDelhi", 149),
-    SOUTH_WEST_DELHI("SouthWestDelhi", 150);
+    SOUTH_WEST_DELHI("SouthWestDelhi", 150),
+
+    //HARYANA
+    GURGAON("Gurgaon", 188);
 
 
     private final String name;
     private final Integer id;
 
     private static final Map<String, District> nameMap = new HashMap<>();
+
+    private static final Map<Integer, District> idMap = new HashMap<>();
 
     District(String name, Integer id) {
         this.name = name;
@@ -33,7 +40,9 @@ public enum District {
     static {
         for(District district : values()){
             nameMap.put(district.name.toLowerCase(), district);
+            idMap.put(district.id, district);
         }
+
     }
 
     public String getName() {
@@ -49,6 +58,12 @@ public enum District {
         if(!nameMap.containsKey(key))
             throw new IllegalArgumentException("No such enum found.");
         return nameMap.get(key);
+    }
+
+    public static District fromId(Integer id) {
+        if(!idMap.containsKey(id))
+            throw new IllegalArgumentException("No such enum found.");
+        return idMap.get(id);
     }
 
     @JsonCreator

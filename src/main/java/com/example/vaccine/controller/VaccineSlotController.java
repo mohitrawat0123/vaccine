@@ -29,7 +29,7 @@ public class VaccineSlotController {
     @DeleteMapping("/register")
     public ResponseEntity<String> deRegisterForNotification(@Valid @RequestBody RegistrationRequestDTO requestDTO) {
         slotFinderService.deRegisterForNotification(requestDTO);
-        return ResponseEntity.ok("User Registered Successfully !!");
+        return ResponseEntity.ok("User De-registered Successfully !!");
     }
 
     @GetMapping("/get/district")
