@@ -1,13 +1,17 @@
 package com.example.vaccine.controller;
 
+import com.example.vaccine.dto.RegistrationRequestDTO;
 import com.example.vaccine.dto.VaccineResponseDTO;
+import com.example.vaccine.enums.District;
 import com.example.vaccine.enums.DistrictConverter;
 import com.example.vaccine.service.SlotFinderService;
-import com.example.vaccine.enums.District;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/vaccine/slot")
@@ -17,10 +21,14 @@ public class VaccineSlotController {
     private SlotFinderService slotFinderService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerForNotification(@RequestParam District district,
-                                                          @RequestParam Integer age,
-                                                          @RequestParam String email) {
-        slotFinderService.registerForNotification(district, age, email);
+    public ResponseEntity<String> registerForNotification(@Valid @RequestBody RegistrationRequestDTO requestDTO) {
+        slotFinderService.registerForNotification(requestDTO);
+        return ResponseEntity.ok("User Registered Successfully !!");
+    }
+
+    @DeleteMapping("/register")
+    public ResponseEntity<String> deRegisterForNotification(@Valid @RequestBody RegistrationRequestDTO requestDTO) {
+        slotFinderService.deRegisterForNotification(requestDTO);
         return ResponseEntity.ok("User Registered Successfully !!");
     }
 

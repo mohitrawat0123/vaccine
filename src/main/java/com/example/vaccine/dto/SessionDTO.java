@@ -13,7 +13,7 @@ import java.util.List;
 public class SessionDTO {
 
 
-    @JsonFormat(pattern = "dd-MM-YYYY")
+    @JsonFormat(pattern = "dd-MM-yyyy")
     private Date date;
 
     @JsonAlias("available_capacity")
@@ -21,6 +21,8 @@ public class SessionDTO {
 
     @JsonAlias("min_age_limit")
     private Integer minAge;
+
+    private String vaccine;
 
     private List<String> slots;
 }

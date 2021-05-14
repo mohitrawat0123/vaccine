@@ -1,8 +1,11 @@
 package com.example.vaccine.service;
 
+import com.example.vaccine.dao.RegistrationRepositoryService;
 import com.example.vaccine.dto.CenterResponseDTO;
+import com.example.vaccine.dto.MailRequestDTO;
 import com.example.vaccine.dto.SessionDTO;
 import com.example.vaccine.dto.VaccineResponseDTO;
+import com.example.vaccine.dto.RegistrationRequestDTO;
 import com.example.vaccine.enums.District;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,27 +14,38 @@ import org.apache.http.client.utils.URIBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 @Service
 public class SlotFinderService implements ISlotFinderService {
 
-    @Autowired
-    private static RestTemplate restTemplate;
-
     @Value("${cowin.base.url}")
     private String cowinBaseUrl;
 
+    @Autowired
+    private MailSenderUtil mailSenderUtil;
+
+    @Autowired
+    private RegistrationRepositoryService registrationRepositoryService;
+
+    private static RestTemplate restTemplate;
+
+    private static ScheduledExecutorService executorService;
+
     private static final ReentrantLock lock = new ReentrantLock();
+
+    private static final Map<String, Timer> registrations = new ConcurrentHashMap<>();
 
     private static int itr = 0;
 
@@ -44,15 +58,14 @@ public class SlotFinderService implements ISlotFinderService {
         SlotFinderService.restTemplate = restTemplate;
     }
 
-    @Scheduled(fixedRate = 30000)
-    public void checkSlotEastDelhi() {
-        this.checkSlot(District.EAST_DELHI);
+    @PostConstruct
+    public void init() {
+        executorService = Executors.newScheduledThreadPool(10);
     }
 
-    @Scheduled(fixedRate = 30000)
-    public void checkSlotShahdara() {
-        this.checkSlot(District.SHAHDARA);
-
+    @PreDestroy
+    public void destroy() {
+        executorService.shutdown();
     }
 
     private static int getItr(){
@@ -64,8 +77,8 @@ public class SlotFinderService implements ISlotFinderService {
         return next;
     }
 
-    private void checkSlot(District district) {
-//        System.out.println("Checking slot for: "+district);
+    private void checkSlot(District district, Integer age) {
+        System.out.println("Checking "+district);
         String date = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
 
         try {
@@ -78,23 +91,69 @@ public class SlotFinderService implements ISlotFinderService {
 
             responseDTO.getCenters().forEach(center -> {
                 for(SessionDTO sessionDTO : center.getSessions()){
-                    if(sessionDTO.getAvailable() > 0 && sessionDTO.getMinAge().equals(18)){
+                    if(sessionDTO.getAvailable() > 0 && sessionDTO.getMinAge().equals(age)){
                         if(!CollectionUtils.isEmpty(sessionDTO.getSlots())){
-                            System.out.println(new Date() + ": Found "+sessionDTO.getAvailable()+" slot(S) in ["+center.getName() +", "+ center.getPincode()+"]");
+
+                            String message = center.getName() +"\n"+ center.getAddress()+ ", "+ center.getPincode()
+                                    +"\n"+"Vaccine: "+sessionDTO.getVaccine()
+                                    +"\n"+sessionDTO.getAvailable()+" slot(s) available on "+ new SimpleDateFormat("EEE, d MMM").format(sessionDTO.getDate());
+
+                            List<String> emailIds = registrationRepositoryService.getEmailForDistrict(district.getId());
+                            if(!CollectionUtils.isEmpty(emailIds)) {
+                                MailRequestDTO mailRequestDTO = MailRequestDTO.builder()
+                                        .from("noreply@cowidbot.in")
+                                        .to(emailIds)
+                                        .subject("Vaccination Slot Available | " + center.getDistrictName())
+                                        .body(message)
+                                        .build();
+                                mailSenderUtil.sendMail(mailRequestDTO);
+                            }
+
+
+                            System.out.println(new Date() +": "+ center.getName() +"\n"+ center.getAddress()+ ", "+ center.getPincode()
+                                    +"\n"+"Vaccine: "+sessionDTO.getVaccine()
+                                    +"\n"+sessionDTO.getAvailable()+" slot(s) available on "
+                                    + new SimpleDateFormat("EEE, d MMM").format(sessionDTO.getDate()));
                         }
                     }
                 }
             });
 
         } catch (Exception e) {
+            System.out.println("Exception occurred while checking slots - "+e.getMessage());
             e.printStackTrace();
         }
 
     }
 
     @Override
-    public void registerForNotification(District district, Integer age, String email) {
-        //TODO: submit a task, if doesn't exist
+    public void registerForNotification(RegistrationRequestDTO requestDTO) {
+        District district = requestDTO.getDistrict();
+        synchronized (district) {
+            registrationRepositoryService.registerEmail(requestDTO);
+            if(!registrations.containsKey(district.getName())) {
+                System.out.println("Registering for "+ district);
+                Timer timerTask = new Timer();
+                timerTask.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        checkSlot(district, requestDTO.getAge());
+                    }
+                }, 0, 30000);
+                registrations.put(district.getName(), timerTask);
+            }
+        }
+    }
+
+    @Override
+    public void deRegisterForNotification(RegistrationRequestDTO requestDTO) {
+        District district = requestDTO.getDistrict();
+        synchronized (district) {
+            if(registrationRepositoryService.deRegisterEmail(requestDTO) && registrations.containsKey(district.getName())){
+                registrations.get(district.getName()).cancel();
+                registrations.remove(district.getName());
+            }
+        }
     }
 
     @SneakyThrows
@@ -171,6 +230,8 @@ public class SlotFinderService implements ISlotFinderService {
         httpHeaders.add("user-agent", userAgents.get(getItr()));
         httpHeaders.add("host", "cdn-api.co-vin.in");
         httpHeaders.add("referrer", "https://www.cowin.gov.in/");
+        httpHeaders.add("if-none-match", "W/\"aad6-usSnZGE366m59dXydt9RRTkoRKU\"");
+
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET,
                 new HttpEntity<>(null, httpHeaders), String.class);

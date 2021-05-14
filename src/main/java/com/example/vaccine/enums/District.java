@@ -1,7 +1,7 @@
 package com.example.vaccine.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.ToString;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,8 +10,15 @@ public enum District {
 
     CENTRAL_DELHI("CentralDelhi", 141),
     WEST_DELHI("WestDelhi", 142),
+    NORTH_WEST_DELHI("NorthWestDelhi", 143),
+    SOUTH_EAST_DELHI("SouthEastDelhi", 144),
     EAST_DELHI("EastDelhi", 145),
-    SHAHDARA("Shahdara", 148);
+    NORTH_DELHI("NorthDelhi", 146),
+    NORTH_EAST_DELHI("NorthEastDelhi", 147),
+    SHAHDARA("Shahdara", 148),
+    SOUTH_DELHI("SouthDelhi", 149),
+    SOUTH_WEST_DELHI("SouthWestDelhi", 150);
+
 
     private final String name;
     private final Integer id;
@@ -51,6 +58,11 @@ public enum District {
         } catch (IllegalArgumentException ex){
             return valueOf(value);
         }
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 
 }
