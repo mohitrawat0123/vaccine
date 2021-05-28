@@ -1,18 +1,18 @@
-package com.example.vaccine.config;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
-
-import java.util.Properties;
-
-/**
- * Programmatic configuration of SMTP client.
- * @author : mohitrawat0123
- */
-@Configuration
-public class SMTPConfig {
-
+//package com.example.vaccine.config;
+//
+//import org.springframework.context.annotation.Bean;
+//import org.springframework.context.annotation.Configuration;
+//import org.springframework.mail.javamail.JavaMailSenderImpl;
+//
+//import java.util.Properties;
+//
+///**
+// * Programmatic configuration of SMTP client.
+// * @author : mohitrawat0123
+// */
+//@Configuration
+//public class SMTPConfig {
+//
 //	@Bean
 //	public JavaMailSenderImpl javaMailSenderImpl(){
 //		JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
@@ -29,5 +29,5 @@ public class SMTPConfig {
 //		prop.put("mail.debug", "true");
 //		return mailSender;
 //	}
-
-}
+//
+//}
